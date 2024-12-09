@@ -1,2 +1,2 @@
-# SwitchGL
+# SquishGL
 Emulate the JavaScript 2D context with WebGL
