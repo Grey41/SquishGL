@@ -2,7 +2,6 @@
     "use strict"
 
     const get = HTMLCanvasElement.prototype.getContext
-    const map = Map
 
     HTMLCanvasElement.prototype.getContext = function(id, options) {
         const canvas = this
@@ -201,7 +200,7 @@
                     },
 
                     mat: {a: 1, b: 0, c: 0, d: 1, e: 0, f: 0},
-                    images: new map(),
+                    images: new Map(),
                     path: []
                 }
 
