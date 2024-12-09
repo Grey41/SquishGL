@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            const get = HTMLCanvasElement.prototype.getContext
+
+            onload = async () => {
+                const file = await fetch("src/squish.js")
+                const link = document.getElementById("download")
+                const pre = document.querySelector("pre")
+
+                link.href = URL.createObjectURL(await file.blob())
+                pre.textContent = pre.textContent.trim()
+            }
+        </script>
+
+        <script src = src/squish.js></script>
+
+        <style>
+            :root {
+                font-size: 16px
+            }
+
+            body {
+                margin: 0;
+                font-family: monospace;
+                color: #444
+            }
+
+            h1 {
+                font-family: audiowide;
+                font-size: 2.5rem;
+                margin: 0;
+                font-weight: normal
+            }
+
+            h2 {
+                margin-top: 3rem
+            }
+
+            a {
+                text-decoration: none;
+                color: #07d;
+                transition: color .1s
+            }
+
+            a:hover {
+                color: #888
+            }
+
+            ul {
+                margin: 3rem 0
+            }
+
+            pre {
+                background-color: #eee;
+                margin: 2rem 0;
+                border-radius: .5rem;
+                padding: .6rem;
+                color: #888;
+                border: 1px solid #aaa
+            }
+
+            .list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: .5rem
+            }
+
+            .list span {
+                background-color: #eee;
+                border: 1px solid #aaa;
+                border-radius: .3rem;
+                padding: .2rem .4rem;
+                font-size: .8rem
+            }
+
+            #box {
+                font-size: .9rem;
+                color: #aaa;
+                font-weight: bold
+            }
+
+            #box div:last-child {
+                color: #393
+            }
+
+            #test {
+                display: flex;
+                box-shadow: 0 0 5px #888;
+                border-radius: .5rem;
+                overflow: hidden;
+                margin: 2rem 0
+            }
+
+            #test > div {
+                flex: 1 1 0
+            }
+
+            #test canvas {
+                display: block;
+                width: 100%;
+                height: 15rem
+            }
+
+            #test span {
+                display: block;
+                background-color: #555;
+                color: #fff;
+                padding: .8rem
+            }
+
+            #test > div:first-child {
+                border-right: 1px solid #aaa
+            }
+
+            #main {
+                max-width: 50rem;
+                padding: 3rem 2rem;
+                margin: 0 auto
+            }
+
+            footer {
+                background-color: #eee;
+                font-family: Arial;
+                padding: 1rem
+            }
+
+            @font-face {
+                font-family: audiowide;
+                src: url(audiowide.ttf)
+            }
+        </style>
+
+        <title>SquishGL &middot; JavaScript 2D Context Emulator</title>
+    </head>
+
+    <body>
+        <section id = main>
+            <h1>Welcome to SquishGL</h1>
+
+            <div id = box>
+                <div>CanvasRenderingContext2D -> WebGLRenderingContext</div>
+                <div>// Build fast online games without learning WebGL</div>
+            </div>
+
+            <ul>
+                <li>Build a game with the JavaScript 2D context</li>
+                <li>Link to the <a id = download download = squish.js>squish.js</a> file</li>
+                <li>Watch SquishGL render things faster</li>
+            </ul>
+
+            <div id = test>
+                <div id = ctx>
+                    <span>CTX2D</span>
+                    <canvas></canvas>
+                </div>
+
+                <div id = switch>
+                    <span>WEBGL</span>
+                    <canvas></canvas>
+                </div>
+
+                <script>
+                    const size = 5
+                    const a = document.getElementById("ctx")
+                    const b = document.getElementById("switch")
+
+                    const ctxa = a.querySelector("canvas").getContext("2d")
+                    const ctxb = get.call(b.querySelector("canvas"), "2d")
+
+                    const spana = a.querySelector("span")
+                    const spanb = b.querySelector("span")
+                    const list = []
+
+                    function draw(ctx) {
+                        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
+                        for (const rect of list) {
+                            ctx.strokeStyle = rect.color
+                            ctx.strokeRect(rect.x - size / 2, rect.y - size / 2, size, size)
+                        }
+                    }
+
+                    setInterval(update, 5e2)
+
+                    function update() {
+                        spana.textContent = spana.text
+                        spanb.textContent = spanb.text
+                    }
+
+                    function loop() {
+                        const time = Date.now()
+
+                        draw(ctxa)
+
+                        const next = Date.now()
+                        const value = next - time
+
+                        spana.text = "CTX2D: " + value + "ms (" + list.length + " particles)"
+                        draw(ctxb)
+
+                        const speed = Date.now() - next
+                        const x = value / speed
+
+                        spanb.text = "WEBGL: " + speed + "ms (" + (isFinite(x) ? x.toFixed(1) : 0) + "x faster)"
+
+                        for (let i = 0; i < 5; i ++) list.push({
+                            x: Math.random() * ctxa.canvas.width,
+                            y: Math.random() * ctxa.canvas.height,
+                            vx: Math.random() - .5,
+                            vy: Math.random() - .5,
+                            color: "#" + (~~(Math.random() * 0xffffff)).toString(16)
+                        })
+
+                        for (const rect of list) {
+                            rect.x = rect.x > ctxa.canvas.width ? 0 : rect.x < 0 ? ctxa.canvas.width : rect.x + rect.vx
+                            rect.y = rect.y > ctxa.canvas.height ? 0 : rect.y < 0 ? ctxa.canvas.height : rect.y + rect.vy
+                        }
+
+                        requestAnimationFrame(loop)
+                    }
+
+                    onresize = () => {
+                        ctxa.canvas.width = ctxa.canvas.clientWidth
+                        ctxa.canvas.height = ctxa.canvas.clientHeight
+
+                        ctxb.canvas.width = ctxb.canvas.clientWidth
+                        ctxb.canvas.height = ctxb.canvas.clientHeight
+                    }
+
+                    onresize()
+                    loop()
+                </script>
+            </div>
+
+            <p>
+                Include SquishGL in the head of your HTML file.
+                You can contribute to this library on <a href = https://github.com/Grey41/SquishGL target = _blank>GitHub</a>.
+            </p>
+
+            <pre>
+&lt;head>
+    &lt;script src = switch.js>&lt;/script>
+&lt;/head>
+            </pre>
+
+            <h2>Supported Properties</h2>
+
+            <div class = list>
+                <span>fillRect()</span>
+                <span>clearRect()</span>
+                <span>translate()</span>
+                <span>rotate()</span>
+                <span>scale()</span>
+                <span>save()</span>
+                <span>restore()</span>
+                <span>transform()</span>
+                <span>getTransform()</span>
+                <span>setTransform()</span>
+                <span>resetTransform()</span>
+                <span>fillText()</span>
+                <span>drawImage()</span>
+                <span>beginPath()</span>
+                <span>closePath()</span>
+                <span>moveTo()</span>
+                <span>lineTo()</span>
+                <span>stroke()</span>
+                <span>measureText()</span>
+                <span>strokeRect()</span>
+                <span>canvas</span>
+                <span>font</span>
+                <span>fillStyle</span>
+                <span>strokeStyle</span>
+                <span>textAlign</span>
+                <span>lineJoin</span>
+                <span>lineWidth</span>
+                <span>miterLimit</span>
+                <span>imageSmoothingEnabled</span>
+            </div>
+
+            <h2>[Currently] Unsupported Properties</h2>
+
+            <div class = list>
+                <span>arc()</span>
+                <span>fill()</span>
+                <span>arcTo()</span>
+                <span>bezierCurveTo()</span>
+                <span>clip()</span>
+                <span>closePath()</span>
+                <span>createConicGradient()</span>
+                <span>createImageData()</span>
+                <span>createLinearGradient()</span>
+                <span>createRadialGradient()</span>
+                <span>drawFocusIfNeeded()</span>
+                <span>ellipse()</span>
+                <span>getContextAttributes()</span>
+                <span>getImageData()</span>
+                <span>getLineDash()</span>
+                <span>isContextLost()</span>
+                <span>isPointInPath()</span>
+                <span>isPointInStroke()</span>
+                <span>putImageData()</span>
+                <span>quadraticCurveTo()</span>
+                <span>rect()</span>
+                <span>roundRect()</span>
+                <span>setLineDash()</span>
+                <span>strokeText()</span>
+                <span>filter</span>
+                <span>fontKerning</span>
+                <span>fontStretch</span>
+                <span>fontVariantCaps</span>
+                <span>direction</span>
+                <span>globalAlpha</span>
+                <span>letterSpacing</span>
+                <span>globalCompositeOperation</span>
+                <span>lineCap</span>
+                <span>lineDashOffset</span>
+                <span>shadowBlur</span>
+                <span>shadowColor</span>
+                <span>shadowOffsetX</span>
+                <span>shadowOffsetY</span>
+                <span>textBaseline</span>
+                <span>textRendering</span>
+                <span>wordSpacing</span>
+            </div>
+        </section>
+
+        <footer>
+            &copy; Copyright GreyHope <script>document.currentScript.replaceWith(document.createTextNode(new Date().getFullYear()))</script>
+        </footer>
+    </body>
+</html>
